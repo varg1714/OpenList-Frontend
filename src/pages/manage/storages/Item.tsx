@@ -57,11 +57,14 @@ const Item = (props: ItemProps) => {
       required={props.required}
     >
       <FormLabel for={props.name} display="flex" alignItems="center">
-        {t(
-          (props.full_name_path ?? props.driver === "common")
-            ? `storages.common.${props.name}`
-            : `drivers.${props.driver}.${props.name}`,
-        )}
+        {(() => {
+          const i18nKey =
+            (props.full_name_path ?? props.driver === "common")
+              ? `storages.common.${props.name}`
+              : `drivers.${props.driver}.${props.name}`
+          const translated = t(i18nKey)
+          return translated === i18nKey && props.help ? props.help : translated
+        })()}
       </FormLabel>
       <Switch fallback={<Center>{t("settings.unknown_type")}</Center>}>
         <Match when={props.type === Type.String}>
@@ -141,15 +144,31 @@ const Item = (props: ItemProps) => {
             <SelectOptions
               readonly={props.readonly}
               searchable={props.type === Type.Select && props.searchable}
-              options={props.options.split(",").map((key) => ({
-                key,
-                label: t(
-                  (props.options_prefix ??
-                    (props.driver === "common"
-                      ? `storages.common.${props.name}s`
-                      : `drivers.${props.driver}.${props.name}s`)) + `.${key}`,
-                ),
-              }))}
+              options={(() => {
+                const optionMap = new Map<string, string>()
+                props.help?.split(";").forEach((subHelp) => {
+                  const option = subHelp.split(":")
+                  if (option.length == 2) {
+                    optionMap.set(option[0], option[1])
+                  }
+                })
+
+                return props.options.split(",").map((key) => ({
+                  key,
+                  label: (() => {
+                    const i18nKey =
+                      (props.options_prefix ??
+                        (props.driver === "common"
+                          ? `storages.common.${props.name}s`
+                          : `drivers.${props.driver}.${props.name}s`)) +
+                      `.${key}`
+                    const translated = t(i18nKey)
+                    return translated === i18nKey && optionMap.get(key)
+                      ? optionMap.get(key)
+                      : translated
+                  })(),
+                }))
+              })()}
             />
           </Select>
         </Match>

@@ -1,4 +1,4 @@
-import { Obj } from "."
+import { Addition, Obj } from "."
 
 export interface Resp<T> {
   code: number
@@ -19,6 +19,7 @@ export type FsListResp = Resp<{
   write: boolean
   provider: string
   direct_upload_tools?: string[]
+  mkdir_config?: Addition
 }>
 
 export type SearchNode = {

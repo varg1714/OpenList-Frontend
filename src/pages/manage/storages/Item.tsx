@@ -63,7 +63,12 @@ const Item = (props: ItemProps) => {
               ? `storages.common.${props.name}`
               : `drivers.${props.driver}.${props.name}`
           const translated = t(i18nKey)
-          return translated === i18nKey && props.help ? props.help : translated
+          return (translated === i18nKey ||
+            translated.toLowerCase() === props.name.toLowerCase() ||
+            i18nKey.endsWith(translated)) &&
+            props.help
+            ? props.help
+            : translated
         })()}
       </FormLabel>
       <Switch fallback={<Center>{t("settings.unknown_type")}</Center>}>
@@ -163,7 +168,10 @@ const Item = (props: ItemProps) => {
                           : `drivers.${props.driver}.${props.name}s`)) +
                       `.${key}`
                     const translated = t(i18nKey)
-                    return translated === i18nKey && optionMap.get(key)
+                    return (translated === i18nKey ||
+                      translated.toLowerCase() === props.name.toLowerCase() ||
+                      i18nKey.endsWith(translated)) &&
+                      optionMap.get(key)
                       ? optionMap.get(key)
                       : translated
                   })(),

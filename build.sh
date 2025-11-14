@@ -115,7 +115,23 @@ validate_git_tag() {
 # Fallback to default git tag for development builds
 fallback_git_tag() {
     git tag -d rolling >/dev/null 2>&1 || true
-    git_version=$(git describe --abbrev=0 --tags 2>/dev/null || echo "v0.0.0")
+
+    git_version=$(git describe --abbrev=0 --tags 2>/dev/null || true)
+
+    if [[ -z "$git_version" ]]; then
+        log_warning "No local git tags found, trying to fetch latest upstream release tag..."
+        latest_tag=$(curl -s https://api.github.com/repos/OpenListTeam/OpenList-Frontend/releases/latest \
+                    | grep -oP '"tag_name":\s*"\K[^"]+')
+
+        if [[ -n "$latest_tag" ]]; then
+            git_version="$latest_tag"
+            log_info "Using latest upstream tag: $git_version"
+        else
+            log_warning "Failed to fetch upstream tag, fallback to v0.0.0"
+            git_version="v0.0.0"
+        fi
+    fi
+
     git_version_clean=${git_version#v}
     git_version_clean=${git_version_clean%%-*}
 }

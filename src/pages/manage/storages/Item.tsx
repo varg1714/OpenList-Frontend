@@ -1,17 +1,26 @@
 import {
+  Box,
+  Button,
   Center,
   FormControl,
   FormHelperText,
   FormLabel,
+  HStack,
   Input,
   Select,
   Switch as HopeSwitch,
   Textarea,
+  VStack,
 } from "@hope-ui/solid"
-import { Match, Show, Switch } from "solid-js"
+import { For, Match, Show, Switch } from "solid-js"
 import { useT } from "~/hooks"
 import { DriverItem, Type } from "~/types"
 import { SelectOptions } from "~/components"
+
+export type ArrayAction =
+  | { type: "add"; payload: Record<string, any> }
+  | { type: "remove"; payload: { index: number } }
+  | { type: "update"; payload: { index: number; name: string; value: any } }
 
 export type ItemProps = DriverItem & {
   readonly?: boolean
@@ -19,21 +28,9 @@ export type ItemProps = DriverItem & {
   options_prefix?: string
   driver?: string
 } & (
-    | {
-        type: Type.Bool
-        onChange?: (value: boolean) => void
-        value: boolean
-      }
-    | {
-        type: Type.Number
-        onChange?: (value: number) => void
-        value: number
-      }
-    | {
-        type: Type.Float
-        onChange?: (value: number) => void
-        value: number
-      }
+    | { type: Type.Bool; onChange?: (value: boolean) => void; value: boolean }
+    | { type: Type.Number; onChange?: (value: number) => void; value: number }
+    | { type: Type.Float; onChange?: (value: number) => void; value: number }
     | {
         type: Type.String | Type.Text
         onChange?: (value: string) => void
@@ -45,10 +42,80 @@ export type ItemProps = DriverItem & {
         onChange?: (value: string) => void
         value: string
       }
+    | {
+        type: Type.Group
+        value: Record<string, any>
+        onChange?: (childName: string, value: any) => void
+      }
+    | {
+        type: Type.Array
+        value: Record<string, any>[]
+        onChange?: (action: ArrayAction) => void
+      }
   )
+
+function GetDefaultValue(type: Type, value?: string) {
+  switch (type) {
+    case Type.Bool:
+      return value === "true"
+    case Type.Number:
+      return value ? parseInt(value) : 0
+    case Type.Float:
+      return value ? parseFloat(value) : 0.0
+    default:
+      return value ?? ""
+  }
+}
+
+function createDefaultObject(fields: DriverItem[]): Record<string, any> {
+  const obj: Record<string, any> = {}
+  for (const field of fields) {
+    if (field.type === Type.Group && field.children) {
+      obj[field.name] = createDefaultObject(field.children)
+    } else if (field.type === Type.Array) {
+      obj[field.name] = [] // 数组默认为空
+    } else {
+      obj[field.name] = GetDefaultValue(field.type, field.default)
+    }
+  }
+  return obj
+}
 
 const Item = (props: ItemProps) => {
   const t = useT()
+
+  const getI18nLabel = (item: DriverItem) => {
+    if (item.help) return item.help
+    const i18nKey =
+      (props.full_name_path ?? props.driver === "common")
+        ? `storages.common.${item.name}`
+        : `drivers.${props.driver}.${item.name}`
+    const translated = t(i18nKey)
+    return translated === i18nKey ||
+      translated.toLowerCase() === item.name.toLowerCase() ||
+      i18nKey.endsWith(translated)
+      ? item.name
+      : translated
+  }
+
+  const getI18nOptionLabel = (
+    item: DriverItem,
+    key: string,
+    optionMap: Map<string, string>,
+  ) => {
+    const rawLabel = optionMap.get(key)
+    if (rawLabel) return rawLabel
+    const i18nKey =
+      (props.options_prefix ??
+        (props.driver === "common"
+          ? `storages.common.${item.name}s`
+          : `drivers.${props.driver}.${item.name}s`)) + `.${key}`
+    const translated = t(i18nKey)
+    return translated === i18nKey || i18nKey.endsWith(translated)
+      ? (optionMap.get(key) ?? key)
+      : translated
+  }
+
   return (
     <FormControl
       w="$full"
@@ -56,21 +123,12 @@ const Item = (props: ItemProps) => {
       flexDirection="column"
       required={props.required}
     >
-      <FormLabel for={props.name} display="flex" alignItems="center">
-        {(() => {
-          const i18nKey =
-            (props.full_name_path ?? props.driver === "common")
-              ? `storages.common.${props.name}`
-              : `drivers.${props.driver}.${props.name}`
-          const translated = t(i18nKey)
-          return (translated === i18nKey ||
-            translated.toLowerCase() === props.name.toLowerCase() ||
-            i18nKey.endsWith(translated)) &&
-            props.help
-            ? props.help
-            : translated
-        })()}
-      </FormLabel>
+      <Show when={props.type !== Type.Group && props.type !== Type.Array}>
+        <FormLabel for={props.name} display="flex" alignItems="center">
+          {getI18nLabel(props)}
+        </FormLabel>
+      </Show>
+
       <Switch fallback={<Center>{t("settings.unknown_type")}</Center>}>
         <Match when={props.type === Type.String}>
           <Input
@@ -101,6 +159,7 @@ const Item = (props: ItemProps) => {
         <Match when={props.type === Type.Float}>
           <Input
             type="number"
+            step="any"
             id={props.name}
             readOnly={props.readonly}
             value={props.value as number}
@@ -115,7 +174,7 @@ const Item = (props: ItemProps) => {
           <HopeSwitch
             id={props.name}
             readOnly={props.readonly}
-            defaultChecked={props.value as boolean}
+            checked={props.value as boolean}
             onChange={
               props.type === Type.Bool
                 ? (e: any) => props.onChange?.(e.currentTarget.checked)
@@ -139,7 +198,7 @@ const Item = (props: ItemProps) => {
           <Select
             id={props.name}
             readOnly={props.readonly}
-            defaultValue={props.value}
+            value={props.value as string}
             onChange={
               props.type === Type.Select
                 ? (e) => props.onChange?.(e)
@@ -153,35 +212,122 @@ const Item = (props: ItemProps) => {
                 const optionMap = new Map<string, string>()
                 props.help?.split(";").forEach((subHelp) => {
                   const option = subHelp.split(":")
-                  if (option.length == 2) {
-                    optionMap.set(option[0], option[1])
-                  }
+                  if (option.length == 2) optionMap.set(option[0], option[1])
                 })
-
                 return props.options.split(",").map((key) => ({
                   key,
-                  label: (() => {
-                    const i18nKey =
-                      (props.options_prefix ??
-                        (props.driver === "common"
-                          ? `storages.common.${props.name}s`
-                          : `drivers.${props.driver}.${props.name}s`)) +
-                      `.${key}`
-                    const translated = t(i18nKey)
-                    return (translated === i18nKey ||
-                      translated.toLowerCase() === props.name.toLowerCase() ||
-                      i18nKey.endsWith(translated)) &&
-                      optionMap.get(key)
-                      ? optionMap.get(key)
-                      : translated
-                  })(),
+                  label: getI18nOptionLabel(props, key, optionMap),
                 }))
               })()}
             />
           </Select>
         </Match>
+
+        <Match when={props.type === Type.Group && props.children}>
+          <Box
+            border="1px solid"
+            borderColor="$neutral6"
+            borderRadius="$md"
+            p="$4"
+            mt="$2"
+          >
+            <VStack spacing="$4">
+              <FormLabel fontWeight="$bold" mb="$2">
+                {getI18nLabel(props)}
+              </FormLabel>
+              <For each={(props as any).children}>
+                {(childItem: DriverItem) => (
+                  <Item
+                    {...childItem}
+                    driver={props.driver}
+                    value={(props as any).value?.[childItem.name]}
+                    onChange={(val: any) => {
+                      if (props.type === Type.Group) {
+                        props.onChange?.(childItem.name, val)
+                      }
+                    }}
+                  />
+                )}
+              </For>
+            </VStack>
+          </Box>
+        </Match>
+
+        <Match when={props.type === Type.Array && props.children}>
+          <VStack w="$full" spacing="$2" alignItems="flex-start">
+            <FormLabel fontWeight="$bold">{getI18nLabel(props)}</FormLabel>
+            <For each={props.value as Record<string, any>[]}>
+              {(itemData, index) => (
+                <Box
+                  border="1px solid"
+                  borderColor="$neutral7"
+                  borderRadius="$lg"
+                  p="$3"
+                  w="$full"
+                >
+                  <VStack spacing="$3">
+                    <HStack w="$full" justifyContent="flex-end">
+                      <Button
+                        size="xs"
+                        colorScheme="danger"
+                        variant="subtle"
+                        onClick={() => {
+                          if (props.type === Type.Array)
+                            props.onChange?.({
+                              type: "remove",
+                              payload: { index: index() },
+                            })
+                        }}
+                      >
+                        {t("global.delete")}
+                      </Button>
+                    </HStack>
+                    <For each={(props as any).children}>
+                      {(childItem: DriverItem) => (
+                        <Item
+                          {...childItem}
+                          driver={props.driver}
+                          value={itemData[childItem.name]}
+                          onChange={(val: any) => {
+                            if (props.type === Type.Array)
+                              props.onChange?.({
+                                type: "update",
+                                payload: {
+                                  index: index(),
+                                  name: childItem.name,
+                                  value: val,
+                                },
+                              })
+                          }}
+                        />
+                      )}
+                    </For>
+                  </VStack>
+                </Box>
+              )}
+            </For>
+            <Button
+              size="sm"
+              variant="outline"
+              colorScheme="primary"
+              onClick={() => {
+                if (props.type === Type.Array && props.children) {
+                  const newObject = createDefaultObject(props.children)
+                  props.onChange?.({ type: "add", payload: newObject })
+                }
+              }}
+            >
+              {t("global.add")} {getI18nLabel(props)}
+            </Button>
+          </VStack>
+        </Match>
       </Switch>
-      <Show when={props.help}>
+
+      <Show
+        when={
+          props.help && props.type !== Type.Group && props.type !== Type.Array
+        }
+      >
         <FormHelperText>
           {t(
             props.driver === "common"

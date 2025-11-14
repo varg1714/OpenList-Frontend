@@ -7,6 +7,7 @@ export interface DriverItem {
   options: string
   required?: boolean
   help?: string
+  children?: DriverItem[]
 }
 
 export interface DriverConfig {

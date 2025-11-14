@@ -6,4 +6,6 @@ export enum Type {
   Number = "number",
   Float = "float",
   MultiPath = "multipath",
+  Group = "group",
+  Array = "array",
 }

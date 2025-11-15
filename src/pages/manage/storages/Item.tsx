@@ -163,7 +163,28 @@ const Item = (props: ItemProps) => {
       flexDirection="column"
       required={props.required}
     >
-      <Show when={props.type !== Type.Group && props.type !== Type.Array}>
+      <Show
+        when={(() => {
+          const simpleLabel =
+            props.type !== Type.Group && props.type !== Type.Array
+
+          if (!simpleLabel) {
+            return false
+          }
+
+          if (props.type === Type.Select) {
+            const optionMap = new Map<string, string>()
+            props.help?.split(";").forEach((subHelp) => {
+              const option = subHelp.split(":")
+              if (option.length == 2) optionMap.set(option[0], option[1])
+            })
+            console.log(optionMap)
+            return props.options.split(",").some((key) => !optionMap.has(key))
+          }
+
+          return true
+        })()}
+      >
         <FormLabel for={props.name} display="flex" alignItems="center">
           {getI18nLabel(props)}
         </FormLabel>

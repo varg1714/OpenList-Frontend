@@ -1,59 +1,42 @@
 import { createDisclosure } from "@hope-ui/solid"
-import { useFetch, usePath, useRouter, useT } from "~/hooks"
+import { ModalInput } from "~/components"
+import { useFetch, usePath, useRouter } from "~/hooks"
 import { bus, fsMkdir, handleRespWithNotifySuccess, pathJoin } from "~/utils"
 import { onCleanup } from "solid-js"
 import { objStore } from "~/store"
-import { DynamicFormModal } from "~/components/DynamicFormModal"
-import { Addition } from "~/types"
 
 export const Mkdir = () => {
-  const t = useT()
   const { isOpen, onOpen, onClose } = createDisclosure()
-  const [, ok] = useFetch(fsMkdir)
+  const [loading, ok] = useFetch(fsMkdir)
   const { pathname } = useRouter()
   const { refresh } = usePath()
-
   const handler = (name: string) => {
     if (name === "mkdir") {
+      if (objStore.mkdir_config) {
+        bus.emit("tool", "mkConfigDir")
+        return
+      }
       onOpen()
     }
   }
-
   bus.on("tool", handler)
   onCleanup(() => {
     bus.off("tool", handler)
   })
-
-  const handleMkdirSubmit = async (data: Addition) => {
-    const fields = objStore.mkdir_config || []
-    let finalPath: string
-
-    if (
-      fields.length === 1 &&
-      fields[0].name === "name" &&
-      typeof data.name === "string"
-    ) {
-      finalPath = pathJoin(pathname(), data.name)
-    } else {
-      finalPath = pathJoin(pathname(), JSON.stringify(data))
-    }
-
-    const resp = await ok(finalPath)
-    handleRespWithNotifySuccess(resp, () => {
-      refresh()
-      onClose()
-    })
-  }
-
-  const mkdirFields = () => objStore.mkdir_config || []
-
   return (
-    <DynamicFormModal
-      title={t("home.toolbar.mkdir")}
+    <ModalInput
+      title="home.toolbar.input_dir_name"
+      validateFilename={true}
       opened={isOpen()}
       onClose={onClose}
-      fields={mkdirFields()}
-      onSubmit={handleMkdirSubmit}
+      loading={loading()}
+      onSubmit={async (name) => {
+        const resp = await ok(pathJoin(pathname(), name))
+        handleRespWithNotifySuccess(resp, () => {
+          refresh()
+          onClose()
+        })
+      }}
     />
   )
 }

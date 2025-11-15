@@ -104,6 +104,9 @@ importers:
       lightgallery:
         specifier: ^2.8.3
         version: 2.9.0
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
       mark.js:
         specifier: ^8.11.1
         version: 8.11.1
@@ -174,6 +177,9 @@ importers:
       '@types/crypto-js':
         specifier: ^4.2.2
         version: 4.2.2
+      '@types/lodash.get':
+        specifier: ^4.4.9
+        version: 4.4.9
       '@types/mark.js':
         specifier: ^8.11.12
         version: 8.11.12
@@ -1450,6 +1456,12 @@ packages:
   '@types/katex@0.16.7':
     resolution: {integrity: sha512-HMwFiRujE5PjrgwHQ25+bsLJgowjGjm5Z8FVSf0N6PwgJrwxH0QxzHYDcKsTfV3wva0vzrpqMTJS2jXPr5BMEQ==}
 
+  '@types/lodash.get@4.4.9':
+    resolution: {integrity: sha512-J5dvW98sxmGnamqf+/aLP87PYXyrha9xIgc2ZlHl6OHMFR2Ejdxep50QfU0abO1+CH6+ugx+8wEUN1toImAinA==}
+
+  '@types/lodash@4.17.20':
+    resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
+
   '@types/mark.js@8.11.12':
     resolution: {integrity: sha512-244ZnaIBpz4c6xutliAnYVZp6xJlmC569jZqnR3ElO1Y01ooYASSVQEqpd2x0A2UfrgVMs5V9/9tUAdZaDMytQ==}
 
@@ -2425,6 +2437,10 @@ packages:
 
   lodash.debounce@4.0.8:
     resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
+
+  lodash.get@4.4.2:
+    resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
+    deprecated: This package is deprecated. Use the optional chaining (?.) operator instead.
 
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
@@ -4746,6 +4762,12 @@ snapshots:
 
   '@types/katex@0.16.7': {}
 
+  '@types/lodash.get@4.4.9':
+    dependencies:
+      '@types/lodash': 4.17.20
+
+  '@types/lodash@4.17.20': {}
+
   '@types/mark.js@8.11.12':
     dependencies:
       '@types/jquery': 3.5.32
@@ -5767,6 +5789,8 @@ snapshots:
   lodash-es@4.17.21: {}
 
   lodash.debounce@4.0.8: {}
+
+  lodash.get@4.4.2: {}
 
   lodash.merge@4.6.2: {}
 

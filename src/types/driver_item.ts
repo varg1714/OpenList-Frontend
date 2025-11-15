@@ -8,6 +8,7 @@ export interface DriverItem {
   required?: boolean
   help?: string
   children?: DriverItem[]
+  visibleOn?: VisibilityCondition
 }
 
 export interface DriverConfig {
@@ -20,4 +21,10 @@ export interface DriverConfig {
   need_ms: boolean
   default_root: string
   alert?: string
+}
+
+export interface VisibilityCondition {
+  field: string
+  op?: "eq" | "neq" | "in" | "notIn"
+  value: any | any[]
 }

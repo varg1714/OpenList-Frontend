@@ -16,6 +16,7 @@ import { For, Match, Show, Switch } from "solid-js"
 import { useT } from "~/hooks"
 import { DriverItem, Type } from "~/types"
 import { SelectOptions } from "~/components"
+import get from "lodash.get"
 
 export type ArrayAction =
   | { type: "add"; payload: Record<string, any> }
@@ -54,16 +55,51 @@ export type ItemProps = DriverItem & {
       }
   )
 
-function GetDefaultValue(type: Type, value?: string) {
+export function getDefaultValue(type: Type, value?: string) {
   switch (type) {
     case Type.Bool:
       return value === "true"
     case Type.Number:
-      return value ? parseInt(value) : 0
+      if (value == null || value === "") {
+        return 0
+      }
+      const num = Number(value)
+      return isFinite(num) ? num : 0
     case Type.Float:
       return value ? parseFloat(value) : 0.0
     default:
       return value ?? ""
+  }
+}
+
+export function isItemVisible(
+  item: DriverItem,
+  currentData: Record<string, any>,
+): boolean {
+  if (!item.visibleOn) {
+    return true
+  }
+  if (!currentData) {
+    return false
+  }
+
+  const { field, op: rawOp, value } = item.visibleOn
+
+  const op = rawOp || "eq"
+  const controllingValue = get(currentData, field)
+
+  switch (op) {
+    case "eq":
+      return controllingValue == value
+    case "neq":
+      return controllingValue != value
+    case "in":
+      return Array.isArray(value) && value.includes(controllingValue)
+    case "notIn":
+      return Array.isArray(value) && !value.includes(controllingValue)
+    default:
+      console.warn(`Unknown visibility condition operator: ${op}`)
+      return true
   }
 }
 
@@ -73,9 +109,9 @@ function createDefaultObject(fields: DriverItem[]): Record<string, any> {
     if (field.type === Type.Group && field.children) {
       obj[field.name] = createDefaultObject(field.children)
     } else if (field.type === Type.Array) {
-      obj[field.name] = [] // 数组默认为空
+      obj[field.name] = []
     } else {
-      obj[field.name] = GetDefaultValue(field.type, field.default)
+      obj[field.name] = getDefaultValue(field.type, field.default)
     }
   }
   return obj
@@ -85,17 +121,21 @@ const Item = (props: ItemProps) => {
   const t = useT()
 
   const getI18nLabel = (item: DriverItem) => {
-    if (item.help) return item.help
     const i18nKey =
       (props.full_name_path ?? props.driver === "common")
         ? `storages.common.${item.name}`
         : `drivers.${props.driver}.${item.name}`
     const translated = t(i18nKey)
-    return translated === i18nKey ||
+    const noChange =
+      translated === i18nKey ||
       translated.toLowerCase() === item.name.toLowerCase() ||
       i18nKey.endsWith(translated)
-      ? item.name
-      : translated
+
+    if (noChange) {
+      return item.help ? item.help : item.name
+    } else {
+      return translated
+    }
   }
 
   const getI18nOptionLabel = (
@@ -151,7 +191,20 @@ const Item = (props: ItemProps) => {
             value={props.value as number}
             onInput={
               props.type === Type.Number
-                ? (e) => props.onChange?.(parseInt(e.currentTarget.value))
+                ? (e) => {
+                    const rawValue = e.currentTarget.value
+                    if (rawValue === "") {
+                      props.onChange?.(0)
+                      return
+                    }
+                    const num = Number(rawValue)
+
+                    if (isFinite(num)) {
+                      if (props.value !== num) {
+                        props.onChange?.(num)
+                      }
+                    }
+                  }
                 : undefined
             }
           />
@@ -237,16 +290,18 @@ const Item = (props: ItemProps) => {
               </FormLabel>
               <For each={(props as any).children}>
                 {(childItem: DriverItem) => (
-                  <Item
-                    {...childItem}
-                    driver={props.driver}
-                    value={(props as any).value?.[childItem.name]}
-                    onChange={(val: any) => {
-                      if (props.type === Type.Group) {
-                        props.onChange?.(childItem.name, val)
-                      }
-                    }}
-                  />
+                  <Show when={isItemVisible(childItem, (props as any).value)}>
+                    <Item
+                      {...childItem}
+                      driver={props.driver}
+                      value={(props as any).value?.[childItem.name]}
+                      onChange={(val: any) => {
+                        if (props.type === Type.Group) {
+                          props.onChange?.(childItem.name, val)
+                        }
+                      }}
+                    />
+                  </Show>
                 )}
               </For>
             </VStack>
@@ -284,22 +339,24 @@ const Item = (props: ItemProps) => {
                     </HStack>
                     <For each={(props as any).children}>
                       {(childItem: DriverItem) => (
-                        <Item
-                          {...childItem}
-                          driver={props.driver}
-                          value={itemData[childItem.name]}
-                          onChange={(val: any) => {
-                            if (props.type === Type.Array)
-                              props.onChange?.({
-                                type: "update",
-                                payload: {
-                                  index: index(),
-                                  name: childItem.name,
-                                  value: val,
-                                },
-                              })
-                          }}
-                        />
+                        <Show when={isItemVisible(childItem, itemData)}>
+                          <Item
+                            {...childItem}
+                            driver={props.driver}
+                            value={itemData[childItem.name]}
+                            onChange={(val: any) => {
+                              if (props.type === Type.Array)
+                                props.onChange?.({
+                                  type: "update",
+                                  payload: {
+                                    index: index(),
+                                    name: childItem.name,
+                                    value: val,
+                                  },
+                                })
+                            }}
+                          />
+                        </Show>
                       )}
                     </For>
                   </VStack>

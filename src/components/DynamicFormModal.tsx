@@ -8,24 +8,16 @@ import {
   ModalOverlay,
   VStack,
 } from "@hope-ui/solid"
-import { createEffect, createSignal, For, on } from "solid-js"
+import { createEffect, createSignal, For, on, Show } from "solid-js"
 import { createStore, produce } from "solid-js/store"
 import { useT } from "~/hooks"
 import { Addition, DriverItem, Type } from "~/types"
-import { ArrayAction, Item } from "~/pages/manage/storages/Item"
-
-function GetDefaultValue(type: Type, value?: string) {
-  switch (type) {
-    case Type.Bool:
-      return value === "true"
-    case Type.Number:
-      return value ? parseInt(value) : 0
-    case Type.Float:
-      return value ? parseFloat(value) : 0.0
-    default:
-      return value ?? ""
-  }
-}
+import {
+  ArrayAction,
+  Item,
+  getDefaultValue,
+  isItemVisible,
+} from "~/pages/manage/storages/Item"
 
 function initializeState(fields: DriverItem[]): Addition {
   const state: Addition = {}
@@ -35,7 +27,7 @@ function initializeState(fields: DriverItem[]): Addition {
     } else if (field.type === Type.Array) {
       state[field.name] = []
     } else {
-      state[field.name] = GetDefaultValue(field.type, field.default)
+      state[field.name] = getDefaultValue(field.type, field.default)
     }
   }
   return state
@@ -68,7 +60,6 @@ function normalizeData(fields: DriverItem[], data: any): any {
     if (field.type === Type.Group && field.children) {
       normalized[field.name] = normalizeData(field.children, value)
     } else if (field.type === Type.Array && field.children) {
-      // 递归处理数组中的每个对象
       normalized[field.name] = (value as any[]).map((item) =>
         normalizeData(field.children!, item),
       )
@@ -82,7 +73,6 @@ function normalizeData(fields: DriverItem[], data: any): any {
     }
   }
 
-  // 对于那些在`data`中不存在但在`fields`中定义的字段，也需要处理
   for (const field of fields) {
     if (normalized[field.name] === undefined) {
       if (field.type === Type.Array) {
@@ -97,8 +87,12 @@ function normalizeData(fields: DriverItem[], data: any): any {
 function prepareDataForSubmit(fields: DriverItem[], data: Addition): Addition {
   const preparedData: Addition = {}
   for (const field of fields) {
+    if (!isItemVisible(field, data)) {
+      continue
+    }
+
     const value = data[field.name]
-    if (value === undefined) continue
+    if (value === undefined || value === null) continue
 
     if (field.type === Type.Group && field.children) {
       preparedData[field.name] = prepareDataForSubmit(
@@ -111,7 +105,8 @@ function prepareDataForSubmit(fields: DriverItem[], data: Addition): Addition {
       )
     } else if (
       (field.type === Type.Number || field.type === Type.Select) &&
-      typeof value === "string"
+      typeof value === "string" &&
+      !isNaN(Number(value))
     ) {
       preparedData[field.name] = Number(value)
     } else {
@@ -139,12 +134,9 @@ export const DynamicFormModal = (props: DynamicFormModalProps) => {
     on(
       () => [props.fields, props.initialData],
       ([fields, initialData]) => {
-        let stateToSet: Addition
-        if (initialData) {
-          stateToSet = normalizeData(fields, initialData)
-        } else {
-          stateToSet = initializeState(fields)
-        }
+        const stateToSet = initialData
+          ? normalizeData(fields, initialData)
+          : initializeState(fields)
         setAddition(stateToSet)
       },
       { defer: true },
@@ -156,6 +148,7 @@ export const DynamicFormModal = (props: DynamicFormModalProps) => {
     try {
       const preparedAddition = prepareDataForSubmit(props.fields, addition)
       await props.onSubmit(preparedAddition)
+      props.onClose()
     } catch (error) {
       console.error("Form submission error:", error)
     } finally {
@@ -172,52 +165,52 @@ export const DynamicFormModal = (props: DynamicFormModalProps) => {
     >
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>{t("home.toolbar.mkdir")}</ModalHeader>
+        <ModalHeader>{props.title}</ModalHeader>
         <ModalBody>
           <VStack spacing="$4">
             <For each={props.fields}>
               {(item) => (
-                <Item
-                  {...item}
-                  // driver={objStore.provider}
-                  value={addition[item.name] as any}
-                  onChange={(...args: any[]) => {
-                    if (item.type === Type.Group) {
-                      const [childName, childValue] = args
-                      setAddition(item.name, childName, childValue)
-                    } else if (item.type === Type.Array) {
-                      // [NEW] 处理 Array 类型的 actions
-                      const action = args[0] as ArrayAction
-                      switch (action.type) {
-                        case "add":
-                          setAddition(
-                            item.name,
-                            produce((arr) => arr.push(action.payload)),
-                          )
-                          break
-                        case "remove":
-                          setAddition(
-                            item.name,
-                            produce((arr) =>
-                              arr.splice(action.payload.index, 1),
-                            ),
-                          )
-                          break
-                        case "update":
-                          setAddition(
-                            item.name,
-                            action.payload.index,
-                            action.payload.name,
-                            action.payload.value,
-                          )
-                          break
+                <Show when={isItemVisible(item, addition)}>
+                  <Item
+                    {...item}
+                    value={addition[item.name] as any}
+                    onChange={(...args: any[]) => {
+                      if (item.type === Type.Group) {
+                        const [childName, childValue] = args
+                        setAddition(item.name, childName, childValue)
+                      } else if (item.type === Type.Array) {
+                        const action = args[0] as ArrayAction
+                        switch (action.type) {
+                          case "add":
+                            setAddition(
+                              item.name,
+                              produce((arr) => arr.push(action.payload)),
+                            )
+                            break
+                          case "remove":
+                            setAddition(
+                              item.name,
+                              produce((arr) =>
+                                arr.splice(action.payload.index, 1),
+                              ),
+                            )
+                            break
+                          case "update":
+                            setAddition(
+                              item.name,
+                              action.payload.index,
+                              action.payload.name,
+                              action.payload.value,
+                            )
+                            break
+                        }
+                      } else {
+                        const [value] = args
+                        setAddition(item.name, value)
                       }
-                    } else {
-                      const [value] = args
-                      setAddition(item.name, value)
-                    }
-                  }}
-                />
+                    }}
+                  />
+                </Show>
               )}
             </For>
           </VStack>

@@ -5,7 +5,7 @@ import { Copy, Move } from "./CopyMove"
 import { Delete } from "./Delete"
 import { Rename } from "./Rename"
 import { NewFile } from "./NewFile"
-import { Mkdir } from "./Mkdir"
+import { MkConfigDir } from "./MkConfigDir"
 import { RecursiveMove } from "./RecursiveMove"
 import { RemoveEmptyDirectory } from "./RemoveEmptyDirectory"
 import { BatchRename } from "./BatchRename"
@@ -18,6 +18,7 @@ import { BackTop } from "./BackTop"
 import { Decompress } from "./Decompress"
 import { Share } from "./Share"
 import { EditDir } from "~/pages/home/toolbar/EditDir"
+import { Mkdir } from "~/pages/home/toolbar/Mkdir"
 
 const Upload = lazy(() => import("../uploads/Upload"))
 
@@ -31,6 +32,7 @@ export const Modal = () => {
       <Decompress />
       <NewFile />
       <Mkdir />
+      <MkConfigDir />
       <Share />
       <RecursiveMove />
       <RemoveEmptyDirectory />

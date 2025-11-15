@@ -17,6 +17,7 @@ import { LocalSettings } from "./LocalSettings"
 import { BackTop } from "./BackTop"
 import { Decompress } from "./Decompress"
 import { Share } from "./Share"
+import { EditDir } from "~/pages/home/toolbar/EditDir"
 
 const Upload = lazy(() => import("../uploads/Upload"))
 
@@ -40,6 +41,7 @@ export const Modal = () => {
         <Upload />
       </ModalWrapper>
       <LocalSettings />
+      <EditDir />
     </>
   )
 }

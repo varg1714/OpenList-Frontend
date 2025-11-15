@@ -1,20 +1,21 @@
 import { createDisclosure } from "@hope-ui/solid"
 import { useFetch, usePath, useRouter, useT } from "~/hooks"
-import { bus, fsMkdir, handleRespWithNotifySuccess, pathJoin } from "~/utils"
+import { bus, fsRename, handleRespWithNotifySuccess, pathJoin } from "~/utils"
 import { onCleanup } from "solid-js"
-import { objStore } from "~/store"
+import { objStore, selectedObjs } from "~/store"
 import { DynamicFormModal } from "~/components/DynamicFormModal"
 import { Addition } from "~/types"
 
-export const Mkdir = () => {
+export const EditDir = () => {
   const t = useT()
   const { isOpen, onOpen, onClose } = createDisclosure()
-  const [, ok] = useFetch(fsMkdir)
+  const [, ok] = useFetch(fsRename)
   const { pathname } = useRouter()
   const { refresh } = usePath()
 
   const handler = (name: string) => {
-    if (name === "mkdir") {
+    if (name === "editDir") {
+      console.log("editDir")
       onOpen()
     }
   }
@@ -25,20 +26,11 @@ export const Mkdir = () => {
   })
 
   const handleMkdirSubmit = async (data: Addition) => {
-    const fields = objStore.mkdir_config || []
-    let finalPath: string
-
-    if (
-      fields.length === 1 &&
-      fields[0].name === "name" &&
-      typeof data.name === "string"
-    ) {
-      finalPath = pathJoin(pathname(), data.name)
-    } else {
-      finalPath = pathJoin(pathname(), JSON.stringify(data))
-    }
-
-    const resp = await ok(finalPath)
+    const resp = await ok(
+      pathJoin(pathname(), selectedObjs()[0].name),
+      JSON.stringify(data),
+      false,
+    )
     handleRespWithNotifySuccess(resp, () => {
       refresh()
       onClose()
@@ -53,6 +45,7 @@ export const Mkdir = () => {
       opened={isOpen()}
       onClose={onClose}
       fields={mkdirFields()}
+      initialData={selectedObjs()?.[0]?.additional}
       onSubmit={handleMkdirSubmit}
     />
   )

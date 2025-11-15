@@ -18,6 +18,13 @@ export const Rename = () => {
         bus.emit("tool", "batchRename")
         return
       }
+
+      if (selectedObjs()?.[0]?.additional) {
+        console.log("rename", selectedObjs()[0].additional)
+        bus.emit("tool", "editDir")
+        return
+      }
+
       onOpen()
       setOverwrite(false)
     }

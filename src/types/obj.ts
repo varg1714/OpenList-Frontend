@@ -1,4 +1,5 @@
 import { PageResp } from "~/types/resp"
+import { Addition } from "~/types/storage"
 
 export enum ObjType {
   UNKNOWN,
@@ -21,6 +22,7 @@ export interface Obj {
   type: ObjType
   path: string
   mount_details?: MountDetails
+  additional?: Addition
 }
 
 export type StoreObj = Obj & {

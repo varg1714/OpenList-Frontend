@@ -71,6 +71,12 @@ export const initialLocalSettings = [
     default: "14",
     type: "number",
   },
+  {
+    key: "toolbar_position",
+    default: "right",
+    type: "select",
+    options: ["left", "right"],
+  },
 ]
 export type LocalSetting = (typeof initialLocalSettings)[number]
 for (const setting of initialLocalSettings) {

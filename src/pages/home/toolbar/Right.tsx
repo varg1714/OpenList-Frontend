@@ -3,7 +3,14 @@ import { createMemo, Show } from "solid-js"
 import { RightIcon } from "./Icon"
 import { CgMoreO } from "solid-icons/cg"
 import { TbCheckbox } from "solid-icons/tb"
-import { objStore, selectAll, State, toggleCheckbox, userCan } from "~/store"
+import {
+  local,
+  objStore,
+  selectAll,
+  State,
+  toggleCheckbox,
+  userCan,
+} from "~/store"
 import { bus } from "~/utils"
 import { operations } from "./operations"
 import { IoMagnetOutline } from "solid-icons/io"
@@ -24,12 +31,20 @@ export const Right = () => {
   const isFolder = createMemo(() => objStore.state === State.Folder)
   const { refresh } = usePath()
   const { isShare } = useRouter()
+
+  const positionProps = createMemo(() => {
+    const positionKey = local["toolbar_position"] || "right" // 提供一个默认值
+    return {
+      [positionKey]: margin(),
+    }
+  })
+
   return (
     <Box
       class="left-toolbar-box"
       pos="fixed"
-      right={margin()}
       bottom={margin()}
+      {...positionProps()}
     >
       <Show
         when={isOpen()}

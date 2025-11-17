@@ -163,6 +163,11 @@
       "direct": "Direct",
       "dblclick": "Double click",
       "disable_while_checked": "Disable while checked"
+    },
+    "toolbar_position": "Toolbar position",
+    "toolbar_position_options": {
+      "left": "Left",
+      "right": "Right"
     }
   },
   "package_download": {

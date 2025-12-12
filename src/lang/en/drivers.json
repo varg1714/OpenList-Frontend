@@ -196,6 +196,17 @@
     "upload_thread": "Upload thread",
     "upload_thread-tips": "1\u003c=thread\u003c=32"
   },
+  "AList V3": {
+    "forward_archive_requests": "Forward archive requests",
+    "meta_password": "Meta password",
+    "pass_ip_to_upsteam": "Pass ip to upsteam",
+    "pass_ua_to_upsteam": "Pass ua to upsteam",
+    "password": "Password",
+    "root_folder_path": "Root folder path",
+    "token": "Token",
+    "url": "Url",
+    "username": "Username"
+  },
   "Alias": {
     "details_pass_through": "Details pass through",
     "download_concurrency": "Download concurrency",
@@ -299,6 +310,7 @@
     "container_name-tips": "The name of the container in Azure Storage (created in the Azure portal). https://learn.microsoft.com/azure/storage/blobs/blob-containers-portal",
     "endpoint": "Endpoint",
     "endpoint-tips": "e.g. https://accountname.blob.core.windows.net/. The full endpoint URL for Azure Storage, including the unique storage account name (3 ~ 24 numbers and lowercase letters only).",
+    "root_folder_path": "Root folder path",
     "sign_url_expire": "Sign url expire",
     "sign_url_expire-tips": "The expiration time for SAS URLs, in hours."
   },
@@ -356,7 +368,7 @@
     "default_branch": "Default branch",
     "default_branch-tips": "Default branch for new releases",
     "repo": "Repo",
-    "root_folder_path": "Root folder path",
+    "root_folder_id": "Root folder id",
     "token": "Token",
     "use_tag_name": "Use tag name",
     "use_tag_name-tips": "Use tag name instead of release name"
@@ -574,7 +586,7 @@
     "gh_proxy-tips": "GitHub proxy, e.g. https://ghproxy.net/github.com or https://gh-proxy.com/github.com ",
     "repo_structure": "Repo structure",
     "repo_structure-tips": "structure:[path:]org/repo",
-    "root_folder_id": "Root folder id",
+    "root_folder_path": "Root folder path",
     "show_all_version": "Show all version",
     "show_all_version-tips": "show all versions",
     "show_readme": "Show readme",
@@ -705,7 +717,7 @@
   "MediaFire": {
     "chunk_size": "Chunk size",
     "cookie": "Cookie",
-    "cookie-tips": "Required for navigation",
+    "cookie-tips": "Required for MediaFire API authentication",
     "limit_rate": "Limit rate",
     "limit_rate-tips": "limit all api request rate ([limit]r/1s)",
     "order_by": "Order by",
@@ -721,7 +733,7 @@
     },
     "root_folder_path": "Root folder path",
     "session_token": "Session token",
-    "session_token-tips": "Required for MediaFire API",
+    "session_token-tips": "Optional for MediaFire API, can be auto-acquired from cookie",
     "upload_threads": "Upload threads",
     "upload_threads-tips": "concurrent upload threads"
   },
@@ -1369,6 +1381,7 @@
     },
     "189CloudPC": {},
     "189CloudTV": {},
+    "AList V3": {},
     "Alias": {},
     "Aliyundrive": {
       "alert": "There may be an infinite loop bug in this driver.\nDeprecated, no longer maintained and will be removed in a future version.\nWe recommend using the official driver AliyundriveOpen."
@@ -1459,6 +1472,7 @@
     "189Cloud": "189Cloud",
     "189CloudPC": "189CloudPC",
     "189CloudTV": "189CloudTV",
+    "AList V3": "AList V3",
     "Alias": "Alias",
     "Aliyundrive": "Aliyundrive",
     "AliyundriveOpen": "AliyundriveOpen",

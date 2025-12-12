@@ -20,7 +20,6 @@ export interface Obj {
   sign?: string
   thumb: string
   type: ObjType
-  path: string
   mount_details?: MountDetails
   additional?: Addition
 }

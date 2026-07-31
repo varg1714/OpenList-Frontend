@@ -5,3 +5,5 @@ dist
 .DS_Store
 .idea
 .test
+# local opencode config
+opencode.jsonc

@@ -1,4 +1,4 @@
-import { Addition, Obj } from "."
+import { Addition, DriverItem, LinkParseConfig, Obj } from "."
 
 export interface Resp<T> {
   code: number
@@ -19,7 +19,8 @@ export type FsListResp = Resp<{
   write: boolean
   provider: string
   direct_upload_tools?: string[]
-  mkdir_config?: Addition
+  mkdir_config?: DriverItem[]
+  link_parse?: LinkParseConfig
 }>
 
 export type SearchNode = {

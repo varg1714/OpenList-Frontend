@@ -40,6 +40,7 @@ export const MkConfigDir = () => {
       opened={isOpen()}
       onClose={onClose}
       fields={mkdirFields()}
+      linkParse={objStore.link_parse}
       onSubmit={handleMkdirSubmit}
     />
   )

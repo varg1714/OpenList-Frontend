@@ -1,5 +1,7 @@
 import {
   Button,
+  HStack,
+  Input,
   Modal,
   ModalBody,
   ModalContent,
@@ -11,7 +13,8 @@ import {
 import { createEffect, createSignal, For, on, Show } from "solid-js"
 import { createStore, produce } from "solid-js/store"
 import { useT } from "~/hooks"
-import { Addition, DriverItem, Type } from "~/types"
+import { Addition, DriverItem, LinkParseConfig, Type } from "~/types"
+import { notify } from "~/utils"
 import {
   ArrayAction,
   Item,
@@ -122,12 +125,14 @@ export interface DynamicFormModalProps {
   onClose: () => void
   fields: DriverItem[]
   initialData?: Addition
+  linkParse?: LinkParseConfig
   onSubmit: (data: Addition) => Promise<any>
 }
 
 export const DynamicFormModal = (props: DynamicFormModalProps) => {
   const t = useT()
   const [loading, setLoading] = createSignal(false)
+  const [linkInput, setLinkInput] = createSignal("")
   const [addition, setAddition] = createStore<Addition>({})
 
   createEffect(
@@ -142,6 +147,28 @@ export const DynamicFormModal = (props: DynamicFormModalProps) => {
       { defer: true },
     ),
   )
+
+  const handleParseLink = () => {
+    const link = linkInput().trim()
+    if (!link || !props.linkParse) return
+    const match = new RegExp(props.linkParse.pattern).exec(link)
+    if (!match?.groups) {
+      notify.warning(t("home.toolbar.link_parse_failed"))
+      return
+    }
+    let filled = false
+    for (const [name, value] of Object.entries(match.groups)) {
+      if (name in addition) {
+        setAddition(name, value)
+        filled = true
+      }
+    }
+    if (filled) {
+      setLinkInput("")
+    } else {
+      notify.warning(t("home.toolbar.link_parse_no_match"))
+    }
+  }
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -168,6 +195,25 @@ export const DynamicFormModal = (props: DynamicFormModalProps) => {
         <ModalHeader>{props.title}</ModalHeader>
         <ModalBody>
           <VStack spacing="$4">
+            <Show when={props.linkParse}>
+              <HStack spacing="$2" w="$full">
+                <Input
+                  placeholder={t("home.toolbar.paste_link")}
+                  value={linkInput()}
+                  onInput={(e) => {
+                    setLinkInput(e.currentTarget.value)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleParseLink()
+                    }
+                  }}
+                />
+                <Button size="sm" flexShrink={0} onClick={handleParseLink}>
+                  {t("home.toolbar.parse_fill")}
+                </Button>
+              </HStack>
+            </Show>
             <For each={props.fields}>
               {(item) => (
                 <Show when={isItemVisible(item, addition)}>

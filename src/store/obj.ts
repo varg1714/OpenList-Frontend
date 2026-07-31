@@ -2,7 +2,7 @@ import naturalSort from "typescript-natural-sort"
 import { cookieStorage, createStorageSignal } from "@solid-primitives/storage"
 import { createMemo, createSignal } from "solid-js"
 import { createStore, produce } from "solid-js/store"
-import { DriverItem, Obj, ObjType, StoreObj } from "~/types"
+import { DriverItem, LinkParseConfig, Obj, ObjType, StoreObj } from "~/types"
 import { bus, log } from "~/utils"
 import { keyPressed } from "./key-event"
 import { local } from "./local_settings"
@@ -30,6 +30,7 @@ const initialObjStore = {
   provider: "",
   direct_upload_tools: <string[] | undefined>undefined,
   mkdir_config: <DriverItem[] | undefined>undefined,
+  link_parse: <LinkParseConfig | undefined>undefined,
   state: State.Initial,
   err: "",
 }
@@ -82,6 +83,8 @@ export const ObjStore = {
     setObjStore("direct_upload_tools", tools),
   setMkdirConfig: (mkdirConfig?: DriverItem[]) =>
     setObjStore("mkdir_config", mkdirConfig),
+  setLinkParse: (linkParse?: LinkParseConfig) =>
+    setObjStore("link_parse", linkParse),
   setErr: (err: string) => setObjStore("err", err),
 }
 

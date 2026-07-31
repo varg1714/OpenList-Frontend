@@ -179,6 +179,7 @@ export const usePath = () => {
         ObjStore.setProvider(data.provider)
         ObjStore.setDirectUploadTools(data.direct_upload_tools)
         ObjStore.setMkdirConfig(data.mkdir_config)
+        ObjStore.setLinkParse(data.link_parse)
         ObjStore.setState(State.Folder)
       },
       handleErr,

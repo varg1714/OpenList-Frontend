@@ -21,6 +21,11 @@ export interface DriverConfig {
   need_ms: boolean
   default_root: string
   alert?: string
+  link_parse?: LinkParseConfig
+}
+
+export interface LinkParseConfig {
+  pattern: string
 }
 
 export interface VisibilityCondition {

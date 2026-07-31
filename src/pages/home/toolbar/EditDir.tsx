@@ -46,6 +46,7 @@ export const EditDir = () => {
       onClose={onClose}
       fields={mkdirFields()}
       initialData={selectedObjs()?.[0]?.additional}
+      linkParse={objStore.link_parse}
       onSubmit={handleMkdirSubmit}
     />
   )
